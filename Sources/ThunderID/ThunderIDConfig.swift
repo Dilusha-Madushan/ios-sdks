@@ -40,6 +40,13 @@ public struct ThunderIDConfig {
     // MARK: - Token Validation
     public var tokenValidation: TokenValidationConfig
 
+    // MARK: - Management
+    /// Collection URL overrides for the management operations, for a management API that runs on a
+    /// different host from `baseUrl`.
+    public var endpoints: ThunderIDEndpoints
+    /// HTTP options.
+    public var http: ThunderIDHttpConfig
+
     // MARK: - Storage & Platform
     public var storage: StorageAdapter?
     public var instanceId: Int?
@@ -67,6 +74,8 @@ public struct ThunderIDConfig {
         attestationEnabled: Bool = false,
         attestationTokenProvider: (() async throws -> String)? = nil,
         tokenValidation: TokenValidationConfig = .init(),
+        endpoints: ThunderIDEndpoints = .init(),
+        http: ThunderIDHttpConfig = .init(),
         storage: StorageAdapter? = nil,
         instanceId: Int? = nil,
         vendor: String = VendorConstants.vendorPrefix
@@ -88,9 +97,40 @@ public struct ThunderIDConfig {
         self.attestationEnabled = attestationEnabled
         self.attestationTokenProvider = attestationTokenProvider
         self.tokenValidation = tokenValidation
+        self.endpoints = endpoints
+        self.http = http
         self.storage = storage
         self.instanceId = instanceId
         self.vendor = vendor
+    }
+}
+
+/// Performs an HTTP request. Supply one to route the management operations through your own transport.
+/// The request it receives already carries the signed-in user's access token.
+public typealias ThunderIDFetcher = (URLRequest) async throws -> (Data, URLResponse)
+
+/// HTTP options.
+public struct ThunderIDHttpConfig {
+    /// Transport for the management operations. Applies to management operations only. Defaults to
+    /// `URLSession`. A fetcher passed to an individual call takes precedence over this one.
+    public var fetcher: ThunderIDFetcher?
+
+    public init(fetcher: ThunderIDFetcher? = nil) {
+        self.fetcher = fetcher
+    }
+}
+
+/// Collection URL overrides for the management operations. A `nil` entry falls back to
+/// `{baseUrl}/{collection}`. A single resource is addressed as `{collection}/{id}`.
+public struct ThunderIDEndpoints {
+    public var agents: String?
+    public var applications: String?
+    public var users: String?
+
+    public init(agents: String? = nil, applications: String? = nil, users: String? = nil) {
+        self.agents = agents
+        self.applications = applications
+        self.users = users
     }
 }
 
